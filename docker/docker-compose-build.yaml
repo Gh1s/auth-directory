@@ -1,0 +1,16 @@
+﻿# This script can be used to start build the Docker images of the directory stack.
+
+version: '3.8'
+
+services:
+
+  directory-api:
+    build:
+      # You can override the build context (where the source code of the API is) by defining a BUILD_CONTEXT environment variable.
+      context: ${BUILD_CONTEXT:-../}
+      dockerfile: src/Csb.Directory.Api/Dockerfile
+      args:
+        # Make sure that you have defined the HTTP_PROXY environment variable on your host.
+        - HTTP_PROXY=$HTTP_PROXY
+        - HTTPS_PROXY=$HTTP_PROXY
+    image: ${REGISTRY:-gcr.io/csb-anthos}/${API_REPOSITORY:-auth/directory/api}:${API_TAG:-latest}

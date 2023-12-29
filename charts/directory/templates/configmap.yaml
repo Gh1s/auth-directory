@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "directory-api.fullname" . }}-config
+  labels:
+    {{- include "directory-api.labels" . | nindent 4 }}
+data:
+  appsettings.{{ .Values.environment }}.json: |
+    {
+      "Serilog": {
+        "MinimumLevel": {
+          "Default": "{{ .Values.logLevel }}"
+        }
+      },
+      "Authentication": {
+        "Authority": "{{ .Values.auth.authority }}",
+        "Audience": "{{ .Values.auth.audience }}"
+      },
+      "Grpc": {
+        "Address": "{{ .Values.grpc.address }}",
+        "CertificatePath": "{{ .Values.grpc.secret.mountPath }}",
+        "Claims": {{ .Values.grpc.claims | toJson }}
+      }
+    }

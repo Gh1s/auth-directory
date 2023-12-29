@@ -1,0 +1,100 @@
+environment: "Production"
+logLevel: "Information"
+replicaCount: 2
+
+image:
+  repository: gcr.io/csb-anthos/auth/directory/api
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  # tag: "latest"
+
+imagePullSecrets: []
+nameOverride: "directory-api"
+fullnameOverride: "directory-api"
+
+auth:
+  authority: https://connect.csb.nc
+  audience: directory
+
+grpc:
+  address: "https://grpc-ldap"
+  secret:
+    name: "grpc-ldap-tls"
+    mountPath: "/etc/ssl/certs/grpc-ldap-tls.crt"
+  claims:
+    - sub
+    - given_name
+    - family_name
+    - name
+    - preferred_username
+    - email
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: "directory-api"
+
+podAnnotations:
+  reloader.stakater.com/auto: "true"
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: directory.csb.nc
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+   - secretName: directory-tls
+     hosts:
+       - directory.csb.nc
+
+resources:
+  limits:
+    cpu: 1
+    memory: 1Gi
+  requests:
+    cpu: 10m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+livenessProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 5
+  timeoutSeconds: 5
+readinessProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 5
+  timeoutSeconds: 5
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
